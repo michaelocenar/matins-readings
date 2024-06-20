@@ -5,8 +5,27 @@ const url = 'http://yourwebsite.com/officium.pl';
 var data,payload;
 
 // Function to get the URL for a specific date
-function getUrlForDate(year, month, day) {
-    payload=
+function getpayloadForDate(year, month, day) {
+    data={
+        command: 'prayMatutinum',
+        date: '1-4-2025',
+        date1: '1-4-2025',
+        searchvalue: '0',
+        officium: 'officium.pl',
+        browsertime: '6-20-2024',
+        version: 'Rubrics 1960 - 1960',
+        version2: '',
+        caller: '0',
+        compare: '',
+        notes: '',
+        plures: '',
+        expand: 'all',
+        lang2: 'English',
+        votive: 'Hodie',
+        expandnum: '',
+        popup: '0',
+        popuplang: ''
+    };
     return `https://www.divinumofficium.com/cgi-bin/horas/officium.pl?date=${year}-${month}-${day}`;
 }
 
