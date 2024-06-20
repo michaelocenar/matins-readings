@@ -1,9 +1,12 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
+const url = 'http://yourwebsite.com/officium.pl';
+var data,payload;
 
 // Function to get the URL for a specific date
 function getUrlForDate(year, month, day) {
+    payload=
     return `https://www.divinumofficium.com/cgi-bin/horas/officium.pl?date=${year}-${month}-${day}`;
 }
 
@@ -12,7 +15,9 @@ async function scrapeThirdReadingForDate(year, month, day) {
     const url = getUrlForDate(year, month, day);
     try {
         const response = await axios.get(url);
+        console.log(response);
         const html = response.data;
+        console.log(html);
         const $ = cheerio.load(html);
 
         // Find the third reading
@@ -31,7 +36,7 @@ async function scrapeThirdReadingForDate(year, month, day) {
 // Function to get all days in a year
 function getAllDaysInYear(year) {
     const dates = [];
-    for (let month = 1; month <= 12; month++) {
+    for (let month = 2; month <= 2; month++) { ///edit month to 12 later
         const daysInMonth = new Date(year, month, 0).getDate();
         for (let day = 1; day <= daysInMonth; day++) {
             dates.push({ year, month: month.toString().padStart(2, '0'), day: day.toString().padStart(2, '0') });
