@@ -1,15 +1,20 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
-const url = 'http://yourwebsite.com/officium.pl';
-var data,payload;
+const qs = require('qs');
+const url = 'https://www.divinumofficium.com/cgi-bin/horas/officium.pl';
+const headers = {
+    'Content-Type': 'application/x-www-form-urlencoded'
+};
+const startMarker = "Lectio 3";
+
 
 // Function to get the URL for a specific date
-function getpayloadForDate(year, month, day) {
-    data={
+function getPayloadForDate(year, month, day) {
+    let data = {
         command: 'prayMatutinum',
-        date: '1-4-2025',
-        date1: '1-4-2025',
+        date: `${month}-${day}-${year}`,
+        date1: `${month}-${day}-${year}`,
         searchvalue: '0',
         officium: 'officium.pl',
         browsertime: '6-20-2024',
@@ -24,30 +29,33 @@ function getpayloadForDate(year, month, day) {
         votive: 'Hodie',
         expandnum: '',
         popup: '0',
-        popuplang: ''
+        popuplang: '',
+        setup: "general;;;$expand='all';;$version='Rubrics 1960 - 1960';;$lang2='English';;$votive='Hodie';;;generalc;;;$expand='all';;$version='Divino Afflatu';;$version2='Rubrics 1960 - 1960';;$langc='Latin';;$accented='plain';;;generalccheck;;;ooooo;;;generalcheck;;;oooo;;;parameters;;;$priest='1';;$building='';;$lang1='Latin';;$psalmvar='';;$whitebground='1';;$blackfont='';;$smallblack='-1';;$redfont=' italic red';;$initiale='+2 bold italic red';;$largefont='+1 bold italic red';;$smallfont='1 red';;$titlefont='+1 red';;$screenheight='1024';;$textwidth='100';;$oldhymns='';;$nonumbers='';;$nofancychars='';;;parameterscheck;;;bbtbbbtcccccnnbbb;;;"
     };
-    return `https://www.divinumofficium.com/cgi-bin/horas/officium.pl?date=${year}-${month}-${day}`;
+    return qs.stringify(data);
 }
 
 // Function to scrape the third reading for a specific date
 async function scrapeThirdReadingForDate(year, month, day) {
-    const url = getUrlForDate(year, month, day);
+    const payload = getPayloadForDate(year, month, day);
     try {
-        const response = await axios.get(url);
-        console.log(response);
-        const html = response.data;
-        console.log(html);
-        const $ = cheerio.load(html);
+        const response = await axios.post(url, payload, { headers });
 
-        // Find the third reading
-        let thirdReading = '';
-        $('b:contains("Third Reading")').each((index, element) => {
-            thirdReading = $(element).next('p').text().trim(); // Adjust selector based on actual HTML structure
-        });
+        // Check if the request was successful
+        if (response.status === 200) {
+            // Get the HTML content
+            const htmlContent = response.data;
+            const $ = cheerio.load(htmlContent);
+            const lectio3 = $('td#Matutinum17');
 
-        return { date: `${year}-${month}-${day}`, reading: thirdReading };
+            let thirdReading = lectio3.text().trim();
+            return thirdReading;
+        } else {
+            console.log(`Failed to fetch for ${year}-${month}-${day}: Status code ${response.status}`);
+            return null;
+        }
     } catch (error) {
-        console.error(`Error scraping ${url}:`, error);
+        console.error(`Error scraping for ${year}-${month}-${day}:`, error);
         return null;
     }
 }
@@ -55,7 +63,7 @@ async function scrapeThirdReadingForDate(year, month, day) {
 // Function to get all days in a year
 function getAllDaysInYear(year) {
     const dates = [];
-    for (let month = 2; month <= 2; month++) { ///edit month to 12 later
+    for (let month = 1; month <= 12; month++) {
         const daysInMonth = new Date(year, month, 0).getDate();
         for (let day = 1; day <= daysInMonth; day++) {
             dates.push({ year, month: month.toString().padStart(2, '0'), day: day.toString().padStart(2, '0') });
@@ -64,15 +72,15 @@ function getAllDaysInYear(year) {
     return dates;
 }
 
+
 // Main function to scrape third readings for all days in a year
 async function scrapeAllThirdReadings(year) {
     const dates = getAllDaysInYear(year);
     const thirdReadings = [];
-
     for (const date of dates) {
         const readingData = await scrapeThirdReadingForDate(date.year, date.month, date.day);
         if (readingData) {
-            thirdReadings.push(readingData);
+            thirdReadings.push({ date: `${date.year}-${date.month}-${date.day}`, reading: readingData });
             console.log(`Scraped: ${date.year}-${date.month}-${date.day}`);
         }
     }
@@ -81,6 +89,7 @@ async function scrapeAllThirdReadings(year) {
     fs.writeFileSync(`third_readings_${year}.json`, JSON.stringify(thirdReadings, null, 2));
     console.log(`Third readings for ${year} have been saved to third_readings_${year}.json`);
 }
+
 
 // Run the script for a specific year (e.g., 2024)
 scrapeAllThirdReadings(2024);
