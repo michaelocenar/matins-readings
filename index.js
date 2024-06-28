@@ -52,9 +52,21 @@ async function scrapeThirdReadingForDate(year, month, day) {
                     //console.log(e.text );
                 })
 
+            const title= $("body > form > p:nth-child(1) > font").each((i,e) => 
+                {
+
+                })
+           
+            let SaintTitle=title.text().trim();
             let thirdReading = lectio3.text().trim();
             thirdReading= getLectio3(thirdReading);
-            return thirdReading;
+            let englishThirdReading=getReading3(thirdReading);
+            if (!checkTitle(SaintTitle))
+                {
+                    //console.log(date);
+                    return null;
+                }
+            return {thirdReading,englishThirdReading};
         } else {
             console.log(`Failed to fetch for ${year}-${month}-${day}: Status code ${response.status}`);
             return null;
@@ -68,7 +80,7 @@ async function scrapeThirdReadingForDate(year, month, day) {
 // Function to get all days in a year
 function getAllDaysInYear(year) {
     const dates = [];
-    for (let month = 1; month <= 12; month++) {
+    for (let month = 1; month <= 1; month++) {
         const daysInMonth = new Date(year, month, 0).getDate();
         for (let day = 1; day <= daysInMonth; day++) {
             dates.push({ year, month: month.toString().padStart(2, '0'), day: day.toString().padStart(2, '0') });
@@ -96,6 +108,7 @@ async function scrapeAllThirdReadings(year) {
 }
 function getLectio3(text)
 {
+    const bibleVerse = /\b\d+:\d+(-\d+)?\b/g;
     const begin="Lectio 3";
     let startIndex=text.indexOf(begin);
     let cutText=text.substring(startIndex)
@@ -104,8 +117,42 @@ function getLectio3(text)
     endindex=cutText.indexOf(match[0])+ (match[0].length);
     //let secondCut=cutText.substring(0,secondIndex);
     cutText=cutText.substring(0,endindex)
+    let match2=cutText.match(bibleVerse);
+    if(match2)
+        {
+            return null;
+        }
     return cutText;
 }
-
+function checkTitle(text)
+{
+    let text2=text;
+    const regex = /(Ss\.|S\.|SS\.)/g;
+    let matches=text2.match(regex);
+    //console.log(matches);
+    if (matches)
+        {
+            return true;
+        }
+    return false;
+}
 // Run the script for a specific year (e.g., 2024)
+function getReading3(text)
+{
+    const bibleVerse = /\b\d+:\d+(-\d+)?\b/g;
+    const begin="Reading 3";
+    let startIndex=text.indexOf(begin);
+    let cutText=text.substring(startIndex)
+    let match=cutText.match(/℟\..*$/m);
+   // console.log(match[0]);
+    endindex=cutText.indexOf(match[0])+ (match[0].length);
+    //let secondCut=cutText.substring(0,secondIndex);
+    cutText=cutText.substring(0,endindex)
+    let match2=cutText.match(bibleVerse);
+    if(match2)
+        {
+            return null;
+        }
+    return cutText;
+}
 scrapeAllThirdReadings(2024);
