@@ -59,14 +59,14 @@ async function scrapeThirdReadingForDate(year, month, day) {
            
             let SaintTitle=title.text().trim();
             let thirdReading = lectio3.text().trim();
-            thirdReading= getLectio3(thirdReading);
+            let thirdReadingLatin= getLectio3(thirdReading);
             let englishThirdReading=getReading3(thirdReading);
             if (!checkTitle(SaintTitle))
                 {
                     //console.log(date);
                     return null;
                 }
-            return {thirdReading,englishThirdReading};
+            return {thirdReadingLatin,englishThirdReading};
         } else {
             console.log(`Failed to fetch for ${year}-${month}-${day}: Status code ${response.status}`);
             return null;
@@ -80,7 +80,7 @@ async function scrapeThirdReadingForDate(year, month, day) {
 // Function to get all days in a year
 function getAllDaysInYear(year) {
     const dates = [];
-    for (let month = 1; month <= 1; month++) {
+    for (let month = 1; month <= 12; month++) {
         const daysInMonth = new Date(year, month, 0).getDate();
         for (let day = 1; day <= daysInMonth; day++) {
             dates.push({ year, month: month.toString().padStart(2, '0'), day: day.toString().padStart(2, '0') });
