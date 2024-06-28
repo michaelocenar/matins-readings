@@ -2,6 +2,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const qs = require('qs');
+const { getSystemErrorMap } = require('util');
 const url = 'https://www.divinumofficium.com/cgi-bin/horas/officium.pl';
 const headers = {
     'Content-Type': 'application/x-www-form-urlencoded'
@@ -46,9 +47,13 @@ async function scrapeThirdReadingForDate(year, month, day) {
             // Get the HTML content
             const htmlContent = response.data;
             const $ = cheerio.load(htmlContent);
-            const lectio3 = $('td#Matutinum17');
+            const lectio3 = $("body > form > table > tbody > tr >td").each((i,e) =>
+                {
+                    //console.log(e.text );
+                })
 
             let thirdReading = lectio3.text().trim();
+            thirdReading= getLectio3(thirdReading);
             return thirdReading;
         } else {
             console.log(`Failed to fetch for ${year}-${month}-${day}: Status code ${response.status}`);
@@ -89,7 +94,18 @@ async function scrapeAllThirdReadings(year) {
     fs.writeFileSync(`third_readings_${year}.json`, JSON.stringify(thirdReadings, null, 2));
     console.log(`Third readings for ${year} have been saved to third_readings_${year}.json`);
 }
-
+function getLectio3(text)
+{
+    const begin="Lectio 3";
+    let startIndex=text.indexOf(begin);
+    let cutText=text.substring(startIndex)
+    let match=cutText.match(/℟\..*$/m);
+   // console.log(match[0]);
+    endindex=cutText.indexOf(match[0])+ (match[0].length);
+    //let secondCut=cutText.substring(0,secondIndex);
+    cutText=cutText.substring(0,endindex)
+    return cutText;
+}
 
 // Run the script for a specific year (e.g., 2024)
 scrapeAllThirdReadings(2024);
