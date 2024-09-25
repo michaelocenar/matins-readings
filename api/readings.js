@@ -3,7 +3,7 @@ const { Configuration, OpenAIApi } = require('openai');
 
 // Setup OpenAI API
 const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,  // Use environment variables for sensitive data
+    apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
